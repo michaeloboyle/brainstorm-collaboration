@@ -1031,32 +1031,632 @@ gantt
 - **Weekend trading**: Lower liquidity amplifies price differences
 - **Governance events**: Polkadot-specific news moves DOT independently
 
-### Claude Flow Agent Specifications
+## Rust/WASM Implementation Architecture
 
-#### DOT/USDC Specialized Trading Agent
-```javascript
-const DOTUSDCArbitrageAgent = {
-  name: "DOT_USDC_Arbitrage_Executor",
-  capabilities: [
-    "dot_usdc_price_monitoring",
-    "stablecoin_spread_analysis",
-    "cross_chain_execution",
-    "polkadot_native_optimization"
-  ],
-  parameters: {
-    minSpread: 1.5, // 1.5% minimum for DOT/USDC
-    maxPosition: 0.7, // 70% of capital
-    usdcPremiumThreshold: 0.5, // Additional USDC arbitrage
-    pdexStakingOptimization: true
-  },
-  exchanges: [
-    "binance_dot_usdc",
-    "polkadex_dot_usdc",
-    "hydradx_dot_usdc",
-    "kucoin_dot_usdt" // For stablecoin arbitrage
-  ]
+### Why Rust/WASM is Optimal for Polkadot Arbitrage
+
+```mermaid
+graph TB
+    subgraph "Advantages of Rust/WASM"
+        A[Native Polkadot Integration<br/>Substrate SDK compatibility] --> B[Zero overhead calls]
+        C[WASM Performance<br/>Near-native speed] --> D[Fast execution critical for arbitrage]
+        E[Memory Safety<br/>No crashes during trading] --> F[Reliable operation]
+        G[Cross-Platform<br/>Browser + Node.js support] --> H[Flexible deployment]
+    end
+
+    subgraph "Polkadot Ecosystem Benefits"
+        I[polkadot-js API<br/>Native WASM bindings] --> J[Direct parachain access]
+        K[Substrate Client<br/>Rust-native] --> L[Optimal performance]
+        M[XCM Support<br/>Built-in Rust libraries] --> N[Cross-chain arbitrage]
+    end
+
+    B --> O[Optimal Architecture Choice]
+    D --> O
+    F --> O
+    H --> O
+    J --> O
+    L --> O
+    N --> O
+```
+
+### Prerequisites and Tech Stack
+
+#### Core Prerequisites
+```toml
+# Cargo.toml dependencies
+[dependencies]
+# Polkadot ecosystem
+polkadot-sdk = "1.0"
+subxt = "0.32"
+sp-core = "21.0"
+sp-runtime = "24.0"
+
+# Async runtime
+tokio = { version = "1.0", features = ["full"] }
+futures = "0.3"
+
+# HTTP/WebSocket clients
+reqwest = { version = "0.11", features = ["json"] }
+tokio-tungstenite = "0.20"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Math for price calculations
+rust_decimal = "1.32"
+bigdecimal = "0.3"
+
+# WASM support
+wasm-bindgen = "0.2"
+js-sys = "0.3"
+web-sys = "0.3"
+```
+
+#### Development Environment Setup
+```bash
+# 1. Install Rust toolchain
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# 2. Add WASM target
+rustup target add wasm32-unknown-unknown
+
+# 3. Install wasm-pack for WASM builds
+cargo install wasm-pack
+
+# 4. Install Substrate dependencies
+cargo install subxt-cli
+
+# 5. Clone Polkadot for local testing
+git clone https://github.com/paritytech/polkadot.git
+```
+
+### Rust Implementation Architecture
+
+#### Project Structure
+```
+arbitrage-agent/
+├── Cargo.toml
+├── src/
+│   ├── lib.rs                 # WASM exports
+│   ├── main.rs               # Native binary
+│   ├── core/
+│   │   ├── mod.rs
+│   │   ├── arbitrage.rs      # Core arbitrage logic
+│   │   ├── exchanges.rs      # Exchange integrations
+│   │   └── risk.rs           # Risk management
+│   ├── polkadot/
+│   │   ├── mod.rs
+│   │   ├── xcm.rs           # Cross-chain messaging
+│   │   ├── pallets.rs       # Parachain interactions
+│   │   └── substrate.rs     # Substrate client
+│   └── wasm/
+│       ├── mod.rs
+│       └── bindings.rs      # JavaScript bindings
+├── www/                     # Web interface
+└── tests/
+```
+
+#### Core Arbitrage Engine (Rust)
+```rust
+// src/core/arbitrage.rs
+use rust_decimal::Decimal;
+use serde::{Deserialize, Serialize};
+use tokio::time::{Duration, interval};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ArbitrageOpportunity {
+    pub symbol: String,
+    pub buy_exchange: String,
+    pub sell_exchange: String,
+    pub buy_price: Decimal,
+    pub sell_price: Decimal,
+    pub spread: Decimal,
+    pub estimated_profit: Decimal,
+    pub max_volume: Decimal,
+}
+
+#[derive(Debug)]
+pub struct ArbitrageEngine {
+    min_spread: Decimal,
+    max_position_size: Decimal,
+    exchanges: Vec<Box<dyn Exchange>>,
+    risk_manager: RiskManager,
+}
+
+impl ArbitrageEngine {
+    pub fn new(config: ArbitrageConfig) -> Self {
+        Self {
+            min_spread: config.min_spread,
+            max_position_size: config.max_position_size,
+            exchanges: config.exchanges,
+            risk_manager: RiskManager::new(config.risk_config),
+        }
+    }
+
+    pub async fn scan_opportunities(&self) -> Result<Vec<ArbitrageOpportunity>, ArbitrageError> {
+        let mut opportunities = Vec::new();
+
+        // Get prices from all exchanges simultaneously
+        let price_futures: Vec<_> = self.exchanges
+            .iter()
+            .map(|exchange| exchange.get_prices())
+            .collect();
+
+        let all_prices = futures::future::try_join_all(price_futures).await?;
+
+        // Calculate arbitrage opportunities
+        for (i, prices_a) in all_prices.iter().enumerate() {
+            for (j, prices_b) in all_prices.iter().enumerate() {
+                if i != j {
+                    if let Some(opportunity) = self.calculate_arbitrage(
+                        &self.exchanges[i].name(),
+                        &self.exchanges[j].name(),
+                        prices_a,
+                        prices_b
+                    ) {
+                        if opportunity.spread >= self.min_spread {
+                            opportunities.push(opportunity);
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(opportunities)
+    }
+
+    pub async fn execute_arbitrage(
+        &self,
+        opportunity: &ArbitrageOpportunity
+    ) -> Result<ExecutionResult, ArbitrageError> {
+        // Risk check
+        if !self.risk_manager.validate_opportunity(opportunity)? {
+            return Err(ArbitrageError::RiskCheckFailed);
+        }
+
+        // Calculate position size
+        let position_size = self.calculate_position_size(opportunity)?;
+
+        // Execute buy order
+        let buy_result = self.execute_buy_order(
+            &opportunity.buy_exchange,
+            &opportunity.symbol,
+            position_size,
+            opportunity.buy_price
+        ).await?;
+
+        // Execute sell order
+        let sell_result = self.execute_sell_order(
+            &opportunity.sell_exchange,
+            &opportunity.symbol,
+            position_size,
+            opportunity.sell_price
+        ).await?;
+
+        Ok(ExecutionResult {
+            buy_order: buy_result,
+            sell_order: sell_result,
+            profit: self.calculate_realized_profit(&buy_result, &sell_result),
+            fees: self.calculate_total_fees(&buy_result, &sell_result),
+        })
+    }
 }
 ```
+
+#### Polkadot/XCM Integration
+```rust
+// src/polkadot/xcm.rs
+use subxt::{OnlineClient, PolkadotConfig};
+use sp_core::sr25519::Pair;
+use xcm::v3::{MultiLocation, MultiAsset, Instruction};
+
+pub struct XcmArbitrage {
+    client: OnlineClient<PolkadotConfig>,
+    signer: Pair,
+}
+
+impl XcmArbitrage {
+    pub async fn new(endpoint: &str, seed: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        let client = OnlineClient::<PolkadotConfig>::from_url(endpoint).await?;
+        let signer = Pair::from_string(seed, None)?;
+
+        Ok(Self { client, signer })
+    }
+
+    pub async fn cross_chain_arbitrage(
+        &self,
+        asset: MultiAsset,
+        source_chain: MultiLocation,
+        dest_chain: MultiLocation,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        // Construct XCM message for cross-chain arbitrage
+        let xcm_message = vec![
+            Instruction::WithdrawAsset(asset.clone().into()),
+            Instruction::InitiateReserveWithdraw {
+                assets: asset.into(),
+                reserve: source_chain,
+                xcm: vec![
+                    Instruction::BuyExecution {
+                        fees: asset.clone(),
+                        weight_limit: xcm::v3::WeightLimit::Unlimited,
+                    },
+                    Instruction::DepositAsset {
+                        assets: xcm::v3::AssetFilter::Wild(xcm::v3::WildAsset::All),
+                        beneficiary: dest_chain,
+                    },
+                ].into(),
+            },
+        ];
+
+        // Submit XCM transaction
+        let call = polkadot::runtime_types::polkadot_runtime::RuntimeCall::XcmPallet(
+            polkadot::runtime_types::pallet_xcm::pallet::Call::send {
+                dest: Box::new(dest_chain.into()),
+                message: Box::new(xcm_message.into()),
+            }
+        );
+
+        let tx = self.client
+            .tx()
+            .create_signed(&call, &self.signer, Default::default())
+            .await?;
+
+        tx.submit_and_watch().await?;
+
+        Ok(())
+    }
+}
+```
+
+#### WASM Bindings for Web Interface
+```rust
+// src/wasm/bindings.rs
+use wasm_bindgen::prelude::*;
+use js_sys::Promise;
+use web_sys::console;
+
+#[wasm_bindgen]
+pub struct WasmArbitrageEngine {
+    engine: crate::core::arbitrage::ArbitrageEngine,
+}
+
+#[wasm_bindgen]
+impl WasmArbitrageEngine {
+    #[wasm_bindgen(constructor)]
+    pub fn new(config_json: &str) -> Result<WasmArbitrageEngine, JsValue> {
+        let config: ArbitrageConfig = serde_json::from_str(config_json)
+            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+
+        Ok(WasmArbitrageEngine {
+            engine: ArbitrageEngine::new(config),
+        })
+    }
+
+    #[wasm_bindgen]
+    pub fn scan_opportunities(&self) -> Promise {
+        let engine = self.engine.clone();
+
+        wasm_bindgen_futures::future_to_promise(async move {
+            match engine.scan_opportunities().await {
+                Ok(opportunities) => {
+                    let json = serde_json::to_string(&opportunities)
+                        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    Ok(JsValue::from_str(&json))
+                }
+                Err(e) => Err(JsValue::from_str(&e.to_string()))
+            }
+        })
+    }
+
+    #[wasm_bindgen]
+    pub fn execute_arbitrage(&self, opportunity_json: &str) -> Promise {
+        let opportunity: ArbitrageOpportunity = serde_json::from_str(opportunity_json)
+            .expect("Invalid opportunity JSON");
+        let engine = self.engine.clone();
+
+        wasm_bindgen_futures::future_to_promise(async move {
+            match engine.execute_arbitrage(&opportunity).await {
+                Ok(result) => {
+                    let json = serde_json::to_string(&result)
+                        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    Ok(JsValue::from_str(&json))
+                }
+                Err(e) => Err(JsValue::from_str(&e.to_string()))
+            }
+        })
+    }
+}
+```
+
+### Deployment Options
+
+#### Option 1: Native Rust Binary
+```bash
+# Build optimized release
+cargo build --release
+
+# Run as system service
+./target/release/arbitrage-agent --config config.toml
+```
+
+#### Option 2: WASM in Browser
+```bash
+# Build WASM package
+wasm-pack build --target web --out-dir www/pkg
+
+# Serve web interface
+cd www && python -m http.server 8000
+```
+
+#### Option 3: Node.js WASM
+```bash
+# Build for Node.js
+wasm-pack build --target nodejs
+
+# Run in Node.js
+node run_arbitrage.js
+```
+
+### Performance Characteristics
+
+```mermaid
+xychart-beta
+    title "Rust/WASM Performance vs Other Languages"
+    x-axis [Execution-Speed, Memory-Usage, Bundle-Size, Development-Time]
+    y-axis "Performance Score" 0 --> 10
+    line [9.5, 9.0, 7.0, 6.0]
+    line [6.0, 5.0, 8.0, 9.0]
+    line [8.0, 4.0, 9.0, 8.5]
+```
+
+**Key Benefits:**
+- **Execution Speed**: Near-native performance critical for arbitrage timing
+- **Memory Safety**: No crashes during live trading operations
+- **Polkadot Native**: Built for the Substrate ecosystem
+- **Cross-Platform**: Deploy anywhere (server, browser, mobile)
+
+### Wallet and Account Requirements
+
+#### Essential Accounts & Wallets
+
+```mermaid
+graph TB
+    subgraph "Centralized Exchanges (CEX)"
+        A[Binance.US ✅<br/>You already have this] --> B[API Keys Required]
+        C[Coinbase Pro<br/>Backup CEX] --> D[API Keys Required]
+        E[Kraken<br/>Alternative option] --> F[API Keys Required]
+    end
+
+    subgraph "Polkadot Ecosystem Wallets"
+        G[Polkadot.js Wallet<br/>Browser extension] --> H[For DEX interactions]
+        I[Talisman Wallet<br/>Multi-chain support] --> J[Alternative option]
+        K[SubWallet<br/>Mobile friendly] --> L[Mobile trading]
+    end
+
+    subgraph "Polkadot DEX Accounts"
+        M[Polkadex Account<br/>Zero fees with PDEX] --> N[Connect wallet]
+        O[HydraDX Account<br/>Omnipool access] --> P[Connect wallet]
+        Q[Moonbeam DEXs<br/>BeamSwap, StellaSwap] --> R[EVM compatible]
+    end
+
+    B --> S[Arbitrage Bot API Access]
+    D --> S
+    F --> S
+    H --> T[Cross-chain execution]
+    J --> T
+    L --> T
+    N --> U[Zero-fee trading]
+    P --> U
+    R --> U
+```
+
+#### Your Existing Setup (Binance.US ✅)
+**Binance.US is perfect as your primary CEX!**
+
+```toml
+# config.toml - Your arbitrage configuration
+[exchanges.binance_us]
+api_key = "your_binance_api_key"
+api_secret = "your_binance_secret"
+testnet = false  # Start with paper trading
+pairs = ["DOT/USD", "DOT/USDC"]
+
+[exchanges.polkadex]
+wallet_address = "your_polkadot_address"
+pdex_staking = true  # For zero fees
+```
+
+#### Required Wallet Setup (30 minutes total)
+
+**Step 1: Install Polkadot.js Extension (5 minutes)**
+```bash
+# Browser extension from:
+# https://polkadot.js.org/extension/
+
+# Create new account or import existing
+# Save seed phrase securely (this controls your funds!)
+```
+
+**Step 2: Get Small Amount of DOT (10 minutes)**
+```bash
+# Option A: Buy DOT on Binance.US, withdraw to Polkadot wallet
+# - Buy $50-100 worth of DOT on Binance.US
+# - Withdraw to your Polkadot.js wallet address
+# - Keep some DOT for transaction fees (~2-5 DOT)
+
+# Option B: Use faucet for testnet (development only)
+# Visit Polkadot faucet for free testnet tokens
+```
+
+**Step 3: Setup Polkadex Account (10 minutes)**
+```bash
+# 1. Visit https://polkadex.trade/
+# 2. Connect your Polkadot.js wallet
+# 3. Stake PDEX tokens for zero trading fees
+# 4. Deposit DOT from your wallet to start trading
+```
+
+**Step 4: API Keys Setup (5 minutes)**
+```bash
+# Binance.US API Keys:
+# 1. Login to Binance.US
+# 2. Account > API Management
+# 3. Create new API key
+# 4. Enable "Spot Trading" permissions
+# 5. Add your IP address for security
+# WARNING: Never share these keys!
+```
+
+#### Wallet Integration Code
+
+```rust
+// src/wallets/polkadot.rs
+use subxt::{OnlineClient, PolkadotConfig};
+use sp_core::{sr25519::Pair, Pair as PairTrait};
+use sp_keyring::AccountKeyring;
+
+pub struct PolkadotWallet {
+    client: OnlineClient<PolkadotConfig>,
+    signer: Pair,
+    address: String,
+}
+
+impl PolkadotWallet {
+    pub async fn new(endpoint: &str, seed_phrase: &str) -> Result<Self, WalletError> {
+        let client = OnlineClient::<PolkadotConfig>::from_url(endpoint).await?;
+        let signer = Pair::from_string(seed_phrase, None)?;
+        let address = signer.public().to_ss58check();
+
+        Ok(Self { client, signer, address })
+    }
+
+    pub async fn get_balance(&self) -> Result<u128, WalletError> {
+        let account_info = self.client
+            .storage()
+            .at_latest()
+            .await?
+            .fetch(&polkadot::storage().system().account(&self.signer.public().into()))
+            .await?;
+
+        Ok(account_info.map(|info| info.data.free).unwrap_or(0))
+    }
+
+    pub async fn transfer_to_exchange(
+        &self,
+        amount: u128,
+        exchange_address: &str
+    ) -> Result<(), WalletError> {
+        let dest = exchange_address.parse()?;
+
+        let transfer_call = polkadot::tx().balances().transfer(dest, amount);
+
+        let tx = self.client
+            .tx()
+            .create_signed(&transfer_call, &self.signer, Default::default())
+            .await?;
+
+        tx.submit_and_watch().await?;
+        Ok(())
+    }
+}
+```
+
+#### Security Setup (CRITICAL!)
+
+```mermaid
+flowchart TD
+    A[Security Checklist] --> B[Seed Phrase Backup]
+    A --> C[API Key Security]
+    A --> D[Network Security]
+    A --> E[Operational Security]
+
+    B --> F[Write down seed phrase<br/>Store in safe/vault]
+    B --> G[Never store digitally<br/>No photos, no cloud]
+
+    C --> H[Binance API keys<br/>Trading permissions only]
+    C --> I[IP whitelist<br/>Restrict to your IP]
+    C --> J[Environment variables<br/>Never hardcode in code]
+
+    D --> K[Use VPN<br/>Consistent IP address]
+    D --> L[Secure WiFi<br/>No public networks]
+
+    E --> M[Start small<br/>$100-500 initial capital]
+    E --> N[Paper trading first<br/>Test without real money]
+    E --> O[Monitor 24/7<br/>Set stop losses]
+```
+
+#### Account Setup Checklist
+
+**Before You Start Trading:**
+- [ ] **Binance.US API Keys**: Trading permissions, IP whitelist ✅ (you have account)
+- [ ] **Polkadot.js Wallet**: Installed with secure seed phrase backup
+- [ ] **Initial DOT**: $50-100 worth for fees and small trades
+- [ ] **Polkadex Account**: Connected wallet, PDEX staked for zero fees
+- [ ] **Security**: Seed phrase secured offline, API keys in env variables
+- [ ] **Testing**: Validated setup with small test transactions
+
+#### Minimal Starting Capital Breakdown
+
+```mermaid
+pie title Starting Capital Allocation ($1000)
+    "Trading Capital" : 700
+    "Exchange Deposits" : 200
+    "Transaction Fees Reserve" : 50
+    "Emergency Buffer" : 50
+```
+
+**Capital Distribution:**
+| Purpose | Amount | Location | Notes |
+|---------|--------|----------|-------|
+| **Binance.US Trading** | $700 | Binance.US account | Main arbitrage capital |
+| **Polkadot Wallet** | $200 | Polkadot.js wallet | For DEX trading |
+| **Transaction Fees** | $50 | DOT in wallet | Network fees, XCM costs |
+| **Emergency Reserve** | $50 | Separate wallet | Never touch unless emergency |
+
+#### Risk Management with Your Setup
+
+**Binance.US Advantages:**
+- ✅ US-regulated exchange (safer than international)
+- ✅ Lower fees for US customers
+- ✅ Good DOT liquidity and trading pairs
+- ✅ Familiar interface (you already use it)
+
+**Additional Protection:**
+```toml
+# Risk limits in your config
+[risk_management]
+max_position_size = 0.7  # Never risk more than 70% of capital
+stop_loss_percentage = 0.05  # 5% stop loss
+daily_loss_limit = 0.10  # Stop trading if down 10% in a day
+api_rate_limits = true  # Respect exchange limits
+```
+
+#### Next Steps with Your Binance.US Account
+
+1. **Enable API Trading** (5 minutes)
+   - Create API keys with trading permissions
+   - Whitelist your home IP address
+   - Test with small amounts first
+
+2. **Download Polkadot.js Extension** (5 minutes)
+   - Install from official website
+   - Create new wallet or import existing
+   - **CRITICAL**: Backup seed phrase securely
+
+3. **Get Small DOT Amount** (10 minutes)
+   - Buy $50-100 DOT on Binance.US
+   - Withdraw to your Polkadot wallet
+   - Keep some for transaction fees
+
+4. **Paper Trading Setup** (30 minutes)
+   - Configure bot with small amounts
+   - Run simulated trades first
+   - Validate all connections work
+
+You're actually in a great position with Binance.US - it's one of the best exchanges for US-based DOT arbitrage!
+
+### Claude Flow Agent Specifications
 
 #### Development Agent
 ```javascript
