@@ -144,6 +144,221 @@ graph LR
   - Research paper on governance patterns
 - **Timeline**: 6-month development cycle with monthly milestones
 
+## Business Model Canvas
+
+```mermaid
+graph TB
+    subgraph "Key Partners"
+        KP1[Web3 Foundation<br/>Grant funding & guidance]
+        KP2[Parachain Teams<br/>Moonbeam, Acala, Astar]
+        KP3[Research Institutions<br/>Universities, think tanks]
+        KP4[Data Infrastructure<br/>Archive nodes, indexers]
+    end
+
+    subgraph "Key Activities"
+        KA1[Data Collection<br/>Multi-chain indexing]
+        KA2[Analytics Development<br/>ML model training]
+        KA3[Research Publication<br/>Academic papers]
+        KA4[Community Building<br/>Developer outreach]
+    end
+
+    subgraph "Value Propositions"
+        VP1[Comprehensive Data<br/>Ecosystem-wide insights]
+        VP2[Governance Intelligence<br/>Predictive analytics]
+        VP3[Open Source Tools<br/>Free developer access]
+        VP4[Research Quality<br/>Academic rigor]
+    end
+
+    subgraph "Customer Relationships"
+        CR1[Open Source Community<br/>GitHub, documentation]
+        CR2[Academic Network<br/>Research collaborations]
+        CR3[Developer Support<br/>API documentation]
+        CR4[Grant Reporting<br/>Web3 Foundation updates]
+    end
+
+    subgraph "Customer Segments"
+        CS1[Polkadot Developers<br/>dApp builders, researchers]
+        CS2[Academic Researchers<br/>Blockchain governance studies]
+        CS3[Parachain Teams<br/>Performance monitoring]
+        CS4[Token Holders<br/>Governance participants]
+    end
+
+    subgraph "Key Resources"
+        KR1[Archive Node Access<br/>Historical blockchain data]
+        KR2[Analytics Expertise<br/>Data science team]
+        KR3[Research Reputation<br/>Academic credibility]
+        KR4[Grant Funding<br/>Web3 Foundation support]
+    end
+
+    subgraph "Channels"
+        CH1[Public Dashboard<br/>Web-based interface]
+        CH2[Developer APIs<br/>GraphQL endpoints]
+        CH3[Research Publications<br/>Academic journals]
+        CH4[Community Forums<br/>Polkadot governance]
+    end
+
+    subgraph "Cost Structure"
+        COST1[Development: 50%<br/>Engineering team]
+        COST2[Infrastructure: 30%<br/>Servers, data storage]
+        COST3[Research: 15%<br/>Academic partnerships]
+        COST4[Operations: 5%<br/>Maintenance, support]
+    end
+
+    subgraph "Revenue Streams"
+        REV1[Grant Funding: 80%<br/>Web3 Foundation grants]
+        REV2[Premium APIs: 15%<br/>Enterprise developers]
+        REV3[Consulting: 3%<br/>Custom analytics]
+        REV4[Academic Funding: 2%<br/>Research grants]
+    end
+```
+
+## Value Proposition Canvas
+
+```mermaid
+graph LR
+    subgraph "Customer Profile"
+        subgraph "Customer Jobs"
+            CJ1[Understand ecosystem<br/>health and trends]
+            CJ2[Make informed<br/>governance decisions]
+            CJ3[Research blockchain<br/>governance patterns]
+            CJ4[Monitor parachain<br/>performance]
+        end
+
+        subgraph "Pains"
+            P1[Fragmented data<br/>across parachains]
+            P2[No standardized<br/>governance metrics]
+            P3[Limited historical<br/>analysis tools]
+            P4[Complex cross-chain<br/>data correlation]
+            P5[Lack of predictive<br/>insights]
+        end
+
+        subgraph "Gains"
+            G1[Data-driven<br/>decision making]
+            G2[Early trend<br/>identification]
+            G3[Academic research<br/>opportunities]
+            G4[Ecosystem<br/>transparency]
+        end
+    end
+
+    subgraph "Value Map"
+        subgraph "Products & Services"
+            PS1[Unified Analytics<br/>Dashboard]
+            PS2[Governance<br/>Intelligence APIs]
+            PS3[Research<br/>Publications]
+            PS4[Developer<br/>Documentation]
+        end
+
+        subgraph "Pain Relievers"
+            PR1[Single source of<br/>ecosystem data]
+            PR2[Standardized governance<br/>metrics framework]
+            PR3[Historical trend<br/>analysis tools]
+            PR4[Cross-parachain<br/>correlation engine]
+            PR5[ML-powered<br/>predictions]
+        end
+
+        subgraph "Gain Creators"
+            GC1[Real-time ecosystem<br/>insights]
+            GC2[Trend forecasting<br/>capabilities]
+            GC3[Open research<br/>platform]
+            GC4[Transparent governance<br/>analytics]
+        end
+    end
+
+    CJ1 -.-> PS1
+    CJ2 -.-> PS2
+    CJ3 -.-> PS3
+    CJ4 -.-> PS4
+    P1 -.-> PR1
+    P2 -.-> PR2
+    P3 -.-> PR3
+    P4 -.-> PR4
+    P5 -.-> PR5
+    G1 -.-> GC1
+    G2 -.-> GC2
+    G3 -.-> GC3
+    G4 -.-> GC4
+```
+
+## Financial Model (Grant-Focused)
+
+### Web3 Foundation Grant Timeline
+
+```mermaid
+gantt
+    title Grant Application & Development Timeline
+    dateFormat  YYYY-MM
+    section Grant Application
+    Research & Proposal      :2024-01, 2024-03
+    Foundation Review        :2024-03, 2024-05
+    Grant Approval          :milestone, 2024-05, 0d
+    section Development Phase
+    Milestone 1: Data Collection    :2024-05, 2024-07
+    Milestone 2: Analytics Engine   :2024-07, 2024-09
+    Milestone 3: Dashboard & APIs   :2024-09, 2024-11
+    Milestone 4: Research Publication :2024-11, 2024-12
+    section Sustainability
+    Follow-up Grant Application     :2024-12, 2025-01
+    Premium Services Launch        :2025-01, 2025-02
+```
+
+### Grant Budget Allocation
+
+```mermaid
+pie title Web3 Foundation Grant ($100K)
+    "Development Team" : 60
+    "Infrastructure Costs" : 20
+    "Research & Analysis" : 10
+    "Community Outreach" : 5
+    "Administrative" : 5
+```
+
+### Project Economics
+
+| Phase | Duration | Grant Amount | Team Size | Key Deliverables |
+|-------|----------|-------------|-----------|------------------|
+| **Phase 1** | 6 months | $100,000 | 3 developers | MVP platform, basic analytics |
+| **Phase 2** | 6 months | $150,000 | 5 team members | Advanced ML, governance insights |
+| **Phase 3** | 12 months | $200,000 | 8 team members | Full ecosystem coverage, research |
+
+### Sustainability Model
+
+**Year 1-2: Grant-Funded Development**
+- Total grants: $450,000
+- Focus: Open-source development, community building
+- Output: Research papers, open APIs, developer tools
+
+**Year 3+: Revenue Diversification**
+| Revenue Stream | Annual Target | Description |
+|---------------|---------------|-------------|
+| **Enterprise APIs** | $200,000 | Premium data access for institutions |
+| **Custom Analytics** | $150,000 | Bespoke analysis for parachain teams |
+| **Research Partnerships** | $100,000 | University collaborations |
+| **Training & Workshops** | $50,000 | Educational content monetization |
+
+### Impact Metrics
+
+| Metric | Year 1 Target | Year 2 Target | Year 3 Target |
+|--------|---------------|---------------|---------------|
+| **API Calls/Month** | 100K | 500K | 2M |
+| **Research Papers Published** | 2 | 5 | 10 |
+| **Developer Integrations** | 10 | 50 | 200 |
+| **Parachain Coverage** | 10 | 25 | 50+ |
+| **GitHub Stars** | 500 | 2,000 | 5,000 |
+
+### Long-term Vision
+
+```mermaid
+graph TD
+    A[Web3 Grant Platform] --> B[Sustainable Analytics Business]
+    B --> C[Polkadot Ecosystem Intelligence Hub]
+    C --> D[Multi-Chain Analytics Leader]
+
+    A --> |Year 1-2| E[Open Source Development]
+    B --> |Year 3-4| F[Revenue Diversification]
+    C --> |Year 5-6| G[Market Leadership]
+    D --> |Year 7+| H[Cross-Ecosystem Expansion]
+```
+
 ## Next Steps
 1. Research existing analytics solutions and identify gaps
 2. Engage with Web3 Foundation on grant requirements and priorities
