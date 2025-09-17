@@ -29,4 +29,10 @@ What would move this forward?
 
 ## Ideas Index
 
-- (Add your ideas here as they're created)
+### Polkadot Ecosystem
+- **[Polkadot Cross-Chain Arbitrage System](./polkadot-arbitrage-system.md)** - Automated arbitrage across parachains and exchanges
+- **[Cross-Parachain DeFi Yield Aggregator](./polkadot-defi-yield-aggregator.md)** - Intelligent yield optimization across Polkadot DeFi
+
+### Web3 Foundation Grant Opportunities
+- **[Parachain Analytics & Governance Intelligence Platform](./web3-parachain-analytics-platform.md)** - Comprehensive ecosystem analytics and governance insights
+- **[XCM Developer Toolkit & Testing Framework](./xcm-developer-toolkit.md)** - Tools to simplify cross-chain development
