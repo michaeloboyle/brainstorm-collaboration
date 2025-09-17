@@ -20,11 +20,55 @@ High-level approach
 - Feature 2
 - Feature 3
 
+## System Architecture (Optional)
+```mermaid
+graph TB
+    A[Component A] --> B[Component B]
+    B --> C[Component C]
+```
+
 ## Technical Considerations
 Initial thoughts on implementation
 
 ## Next Steps
 What would move this forward?
+```
+
+## Visual Documentation
+
+Our brainstorm ideas include comprehensive Mermaid diagrams to illustrate:
+
+- **System Architecture**: High-level component relationships and data flow
+- **Sequence Diagrams**: Step-by-step process flows and interactions
+- **Process Flows**: Decision trees and workflow logic
+- **Data Visualization**: Pie charts, graphs, and metrics displays
+
+### Example Diagram Types
+
+**Architecture Overview:**
+```mermaid
+graph LR
+    UI[User Interface] --> API[API Layer]
+    API --> DB[Database]
+    API --> EXT[External APIs]
+```
+
+**Process Flow:**
+```mermaid
+sequenceDiagram
+    User->>System: Request
+    System->>Database: Query
+    Database->>System: Data
+    System->>User: Response
+```
+
+**Strategy Allocation:**
+```mermaid
+pie title Resource Distribution
+    "Development" : 40
+    "Marketing" : 30
+    "Operations" : 20
+    "Reserve" : 10
 ```
 
 ## Ideas Index

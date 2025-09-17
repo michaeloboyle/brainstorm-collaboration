@@ -13,6 +13,64 @@ An automated arbitrage system that monitors price differences across Polkadot ec
 - **Automated Execution**: Smart contract-based trade execution with minimal human intervention
 - **Yield Optimization**: Reinvest profits into high-yield Polkadot staking or DeFi protocols
 
+## System Architecture
+
+```mermaid
+graph TB
+    subgraph "Price Monitoring"
+        PM[Price Monitor] --> CEX[Centralized Exchanges]
+        PM --> DEX[Polkadot DEXs]
+        PM --> PC[Parachain DEXs]
+        CEX --> |DOT Prices| PF[Price Feed]
+        DEX --> |DOT/KSM Prices| PF
+        PC --> |Parachain Tokens| PF
+    end
+
+    subgraph "Arbitrage Engine"
+        PF --> AE[Arbitrage Engine]
+        AE --> RM[Risk Manager]
+        AE --> OE[Opportunity Evaluator]
+        OE --> |Profitable Trade| TE[Trade Executor]
+    end
+
+    subgraph "Cross-Chain Execution"
+        TE --> XCM[XCM Bridge]
+        TE --> API[Exchange APIs]
+        XCM --> |Cross-chain Transfer| PC2[Target Parachain]
+        API --> |Direct Trade| CEX2[Target Exchange]
+    end
+
+    subgraph "Profit Management"
+        TE --> PM2[Profit Monitor]
+        PM2 --> ST[Staking Module]
+        PM2 --> RE[Reinvestment Engine]
+        ST --> |Yield| DOT[DOT Rewards]
+        RE --> |Compound| AE
+    end
+```
+
+## Arbitrage Flow Process
+
+```mermaid
+sequenceDiagram
+    participant PM as Price Monitor
+    participant AE as Arbitrage Engine
+    participant RM as Risk Manager
+    participant XCM as XCM Bridge
+    participant DEX1 as Source DEX
+    participant DEX2 as Target DEX
+
+    PM->>AE: Price difference detected (>2%)
+    AE->>RM: Evaluate risk parameters
+    RM->>AE: Risk approved (position size: $10K)
+    AE->>DEX1: Buy DOT at lower price
+    AE->>XCM: Initiate cross-chain transfer
+    XCM->>DEX2: Transfer DOT to target chain
+    AE->>DEX2: Sell DOT at higher price
+    DEX2->>AE: Profit realized
+    AE->>PM: Update performance metrics
+```
+
 ## Technical Considerations
 - **Substrate Integration**: Build on Substrate for native Polkadot ecosystem compatibility
 - **XCM Messaging**: Leverage Cross-Consensus Message format for parachain communication

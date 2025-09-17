@@ -13,6 +13,101 @@ An intelligent yield aggregator that automatically allocates capital across Polk
 - **Cross-Chain Optimization**: Minimize bridge fees through intelligent batching and routing
 - **Vault Strategies**: Pre-configured risk profiles (Conservative, Balanced, Aggressive)
 
+## Platform Architecture
+
+```mermaid
+graph TB
+    subgraph "User Interface Layer"
+        UI[Web/Mobile App] --> API[GraphQL API]
+        API --> AUTH[Authentication]
+        API --> DASH[Dashboard]
+        DASH --> PORT[Portfolio View]
+        DASH --> STRAT[Strategy Selection]
+    end
+
+    subgraph "Yield Discovery Engine"
+        YDE[Yield Discovery] --> MOON[Moonbeam DEXs]
+        YDE --> ASTAR[Astar DeFi]
+        YDE --> ACALA[Acala Protocols]
+        YDE --> PARA[Parallel Finance]
+        YDE --> COMP[Composable Finance]
+        MOON --> |APY Data| YDB[Yield Database]
+        ASTAR --> |APY Data| YDB
+        ACALA --> |APY Data| YDB
+        PARA --> |APY Data| YDB
+        COMP --> |APY Data| YDB
+    end
+
+    subgraph "Risk Assessment"
+        YDB --> RA[Risk Analyzer]
+        RA --> PS[Protocol Scoring]
+        RA --> IL[Impermanent Loss Calculator]
+        RA --> LIQ[Liquidity Analysis]
+        PS --> RISK[Risk Score]
+    end
+
+    subgraph "Strategy Engine"
+        RISK --> SE[Strategy Engine]
+        STRAT --> SE
+        SE --> OPT[Optimizer]
+        OPT --> ALLOC[Asset Allocation]
+        ALLOC --> BATCH[Batch Executor]
+    end
+
+    subgraph "Cross-Chain Execution"
+        BATCH --> XCM[XCM Router]
+        XCM --> VAULT1[Moonbeam Vault]
+        XCM --> VAULT2[Astar Vault]
+        XCM --> VAULT3[Acala Vault]
+        XCM --> VAULT4[Parallel Vault]
+    end
+```
+
+## Yield Optimization Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant SE as Strategy Engine
+    participant RA as Risk Analyzer
+    participant YDE as Yield Discovery
+    participant XCM as XCM Router
+    participant V as Vault Contract
+
+    U->>SE: Deposit $10K (Conservative strategy)
+    SE->>YDE: Scan current yields across parachains
+    YDE->>SE: Return yield opportunities (6-12% APY)
+    SE->>RA: Assess risk for top opportunities
+    RA->>SE: Return risk scores (A-rated protocols)
+    SE->>SE: Optimize allocation (40% Acala, 30% Moonbeam, 30% Astar)
+    SE->>XCM: Execute cross-chain deposits
+    XCM->>V: Deploy funds to selected protocols
+    V->>SE: Confirm deployment and start earning
+
+    Note over SE: Daily rebalancing check
+    SE->>YDE: Check for better opportunities
+    YDE->>SE: New high-yield opportunity found
+    SE->>XCM: Rebalance if >1% improvement
+```
+
+## Vault Strategy Types
+
+```mermaid
+pie title Conservative Strategy Allocation
+    "Acala Staking" : 40
+    "Moonbeam Blue Chips" : 30
+    "Stable Coin Farming" : 20
+    "Cash Reserve" : 10
+```
+
+```mermaid
+pie title Aggressive Strategy Allocation
+    "New Protocol Farming" : 35
+    "Leveraged Positions" : 25
+    "LP High-Volatility Pairs" : 25
+    "Yield Speculation" : 15
+```
+
 ## Technical Considerations
 - **Multi-Chain Integration**: Native support for Moonbeam, Astar, Acala, Parallel, and other DeFi parachains
 - **Smart Contract Architecture**: Upgradeable vault contracts with emergency safeguards
